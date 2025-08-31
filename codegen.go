@@ -125,6 +125,8 @@ func getFields(src string) ([]Field, error) {
 		fields = appendFiled(fields, blocks[1], "string")
 	case "if":
 		fields = appendFiled(fields, blocks[1], "bool")
+	case "in":
+		fields = appendFiled(fields, blocks[1], "[]interface{}")
 	case "multi":
 		if len(blocks) != 4 {
 			return nil, fmt.Errorf("invalid number of fields: %d", len(blocks))

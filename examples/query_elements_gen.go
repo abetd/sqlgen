@@ -30,8 +30,9 @@ func (e *SelectItemsQueryElem) Query() (*sqlgen.Query, error) {
 var selectUsersQueryElemSQL string
 
 type SelectUsersQueryElem struct {
-	ID   int
-	Name string
+	ID    int
+	Name  string
+	Names []interface{}
 }
 
 func (e *SelectUsersQueryElem) SQLTemplate() string {

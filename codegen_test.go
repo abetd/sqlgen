@@ -30,6 +30,36 @@ func Test_getFields(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
+			name:    "int filed",
+			args:    args{src: "int .Filed"},
+			want:    []Field{{Name: "Filed", Type: "int"}},
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "float filed",
+			args:    args{src: "float .Filed"},
+			want:    []Field{{Name: "Filed", Type: "float64"}},
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "string filed",
+			args:    args{src: "string .Filed"},
+			want:    []Field{{Name: "Filed", Type: "string"}},
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "if condition",
+			args:    args{src: "if .IsFoo"},
+			want:    []Field{{Name: "IsFoo", Type: "bool"}},
+			wantErr: assert.NoError,
+		},
+		{
+			name:    "in array",
+			args:    args{src: "in .Names"},
+			want:    []Field{{Name: "Names", Type: "[]interface{}"}},
+			wantErr: assert.NoError,
+		},
+		{
 			name: "multi ",
 			args: args{src: "multi .Where .Sep .Slice"},
 			want: []Field{

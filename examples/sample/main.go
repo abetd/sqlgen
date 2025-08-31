@@ -39,8 +39,9 @@ func main() {
 
 func selectUsers(db *sql.DB) error {
 	e := examples.SelectUsersQueryElem{
-		ID:   2,
-		Name: "test2",
+		ID:    2,
+		Name:  "test3",
+		Names: []interface{}{"test1", "test2"},
 	}
 	q, err := e.Query()
 	if err != nil {
