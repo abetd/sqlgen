@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/abetd/gqlgen"
+	"github.com/abetd/sqlgen"
 )
 
 func main() {

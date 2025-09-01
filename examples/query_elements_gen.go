@@ -4,7 +4,7 @@ package examples
 import (
 	_ "embed"
 
-	"github.com/abetd/gqlgen"
+	"github.com/abetd/sqlgen"
 )
 
 //go:embed select_items.sql

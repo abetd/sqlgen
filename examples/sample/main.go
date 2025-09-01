@@ -6,7 +6,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/abetd/gqlgen/examples"
+	"github.com/abetd/sqlgen/examples"
 )
 
 func main() {
