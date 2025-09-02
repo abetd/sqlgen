@@ -10,6 +10,7 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: sqlgen <inDir>")
+		os.Exit(1)
 	}
 	inDir := os.Args[1]
 	gen := sqlgen.NewCodeGen(inDir)
