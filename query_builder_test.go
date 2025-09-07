@@ -58,6 +58,18 @@ func TestQueryBuilder_Build(t *testing.T) {
 			},
 		},
 		{
+			name: "INTを使用 クエリはパラメータ",
+			fields: fields{
+				templateSQL:  "SELECT * FROM user_table WHERE id = /** int .ID **/?",
+				templateData: struct{ ID int }{ID: 1234},
+				inFuncMap:    nil,
+			},
+			want: want{
+				sql:    "SELECT * FROM user_table WHERE id = ?",
+				params: []interface{}{1234},
+			},
+		},
+		{
 			name: "INを使用 数値",
 			fields: fields{
 				templateSQL:  "SELECT * FROM user_table WHERE id IN /** in .IDs **/(1, 2, 3)",

@@ -46,10 +46,9 @@ func CreateQuery(e QueryElem) (*Query, error) {
 }
 
 func (q *QueryBuilder) Build() (*Query, error) {
-	cleaner := NewSQLQueryCleaner()
-	cleanedSQL := cleaner.CleanQuery(q.templateSQL)
+	sql := q.removeComment(q.templateSQL)
 	query := Query{}
-	t := template.Must(template.New("").Delims(leftDelimiter, rightDelimiter).Funcs(q.funcMap(query.addParam)).Parse(cleanedSQL))
+	t := template.Must(template.New("").Delims(leftDelimiter, rightDelimiter).Funcs(q.funcMap(query.addParam)).Parse(sql))
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, q.templateData); err != nil {
 		return nil, err
@@ -98,34 +97,20 @@ func (q *QueryBuilder) funcMap(addParam func(arg interface{})) template.FuncMap 
 	return funcMap
 }
 
-// SQLQueryCleaner はSQLクエリからコメント後の値を削除する
-type SQLQueryCleaner struct {
-	// 各パターンに対応する正規表現
-	numberPattern *regexp.Regexp
-	stringPattern *regexp.Regexp
-	inPattern     *regexp.Regexp
+var removeCommentPatterns = []*regexp.Regexp{
+	// コメントのあとの?を削除 その後のスペースは保持
+	regexp.MustCompile(`(/\*\*[^*]*\*\*/)\?(\s|$)`),
+	// コメントのあとの(...)を削除 その後のスペースは保持
+	regexp.MustCompile(`(/\*\*[^*]*\*\*/)\([^)]*\)(\s|$)`),
+	// コメントのあとの文字列'str'を削除 その後のスペースは保持
+	regexp.MustCompile(`(/\*\*[^*]*\*\*/)'[^']*'(\s|$)`),
+	// コメントのあとの数字や小数を削除 その後のスペースは保持
+	regexp.MustCompile(`(/\*\*[^*]*\*\*/)\d+(?:\.\d+)?(\s|$)`),
 }
 
-// NewSQLQueryCleaner は新しいSQLQueryCleanerを作成
-func NewSQLQueryCleaner() *SQLQueryCleaner {
-	return &SQLQueryCleaner{
-		// パターン1: 数字・小数 - コメント後の数字や小数を削除（その後のスペースは保持）
-		numberPattern: regexp.MustCompile(`(/\*\*[^*]*\*\*/)\d+(?:\.\d+)?(\s|$)`),
-		// パターン2: 文字列 - コメント後の'...'を削除（その後のスペースは保持）
-		stringPattern: regexp.MustCompile(`(/\*\*[^*]*\*\*/)'[^']*'(\s|$)`),
-		// パターン3: IN句 - コメント後の(...)を削除（その後のスペースは保持）
-		inPattern: regexp.MustCompile(`(/\*\*[^*]*\*\*/)\([^)]*\)(\s|$)`),
+func (q *QueryBuilder) removeComment(query string) string {
+	for _, pattern := range removeCommentPatterns {
+		query = pattern.ReplaceAllString(query, "$1$2")
 	}
-}
-
-// CleanQuery はSQLクエリからコメント後の値を削除
-func (c *SQLQueryCleaner) CleanQuery(query string) string {
-	// 順番が重要：より具体的なパターンから先に処理
-	// パターン3: IN句の処理
-	query = c.inPattern.ReplaceAllString(query, "$1$2")
-	// パターン2: 文字列の処理
-	query = c.stringPattern.ReplaceAllString(query, "$1$2")
-	// パターン1: 数字の処理
-	query = c.numberPattern.ReplaceAllString(query, "$1$2")
 	return query
 }
