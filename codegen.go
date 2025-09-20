@@ -106,10 +106,44 @@ func (g *CodeGen) CodeGen() error {
 	return nil
 }
 
+func parseFields(src string) []string {
+	var fields []string
+	var current strings.Builder
+	inQuotes := false
+	i := 0
+
+	for i < len(src) {
+		char := src[i]
+
+		if char == '"' && (i == 0 || src[i-1] != '\\') {
+			inQuotes = !inQuotes
+			current.WriteByte(char)
+		} else if char == ' ' && !inQuotes {
+			// スペースで区切るが、クォート内でない場合のみ
+			if current.Len() > 0 {
+				fields = append(fields, strings.TrimSpace(current.String()))
+				current.Reset()
+			}
+			// 連続するスペースをスキップ
+			for i+1 < len(src) && src[i+1] == ' ' {
+				i++
+			}
+		} else {
+			current.WriteByte(char)
+		}
+		i++
+	}
+
+	// 最後のフィールドを追加
+	if current.Len() > 0 {
+		fields = append(fields, strings.TrimSpace(current.String()))
+	}
+
+	return fields
+}
+
 func getFields(src string) ([]Field, error) {
-	// TODO 単純なスペース区切りをやめる
-	// multi "(name LIKE ? OR kana LIKE ?)" " AND " .Names のようにダブルコーテーションの間を１ブロックにする
-	blocks := strings.Fields(src)
+	blocks := parseFields(src)
 	if len(blocks) < 2 {
 		return nil, nil
 	}
@@ -131,7 +165,7 @@ func getFields(src string) ([]Field, error) {
 		if len(blocks) != 4 {
 			return nil, fmt.Errorf("invalid number of fields: %d", len(blocks))
 		}
-		// 1: (name LIKE ? OR kana LIKE ?), 2: " AND ", 3: []interface{}{"%foo%", "%bar%", "%var%"}
+		// 1: (name LIKE ? OR kana LIKE ?), 2: "AND", 3: []interface{}{"%foo%", "%bar%", "%var%"}
 		// (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?)
 		fields = appendFiled(fields, blocks[1], "string")
 		fields = appendFiled(fields, blocks[2], "string")

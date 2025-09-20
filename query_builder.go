@@ -88,7 +88,7 @@ func (q *QueryBuilder) funcMap(addParam func(arg interface{})) template.FuncMap 
 					addParam(arg)
 				}
 			}
-			return strings.Join(queries, sep)
+			return strings.Join(queries, " "+sep+" ")
 		},
 	}
 	for k, v := range q.inFuncMap {

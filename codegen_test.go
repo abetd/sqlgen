@@ -70,6 +70,14 @@ func Test_getFields(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
+			name: "multi クエリー、セパレートを指定",
+			args: args{src: "multi \"(name LIKE ? OR kana LIKE ?)\" \" AND \" .Slice"},
+			want: []Field{
+				{Name: "Slice", Type: "[]interface{}"},
+			},
+			wantErr: assert.NoError,
+		},
+		{
 			name:    "multi パラメータ不足",
 			args:    args{src: "multi .Where .Sep"},
 			want:    nil,

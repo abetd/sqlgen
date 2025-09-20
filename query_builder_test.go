@@ -101,7 +101,22 @@ func TestQueryBuilder_Build(t *testing.T) {
 					Names []interface{}
 				}{
 					Where: "(name LIKE ? OR kana LIKE ?)",
-					Sep:   " AND ",
+					Sep:   "AND",
+					Names: []interface{}{"%foo%", "%bar%", "%var%"},
+				},
+			},
+			want: want{
+				sql:    "SELECT * FROM user_table WHERE ( (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?) )",
+				params: []interface{}{"%foo%", "%foo%", "%bar%", "%bar%", "%var%", "%var%"},
+			},
+		},
+		{
+			name: "検索条件を繰り返す検索 検索条件と接続部を指定",
+			fields: fields{
+				templateSQL: "SELECT * FROM user_table WHERE ( /** multi \"(name LIKE ? OR kana LIKE ?)\" \"AND\" .Names **/(name LIKE '%foo%' OR kana LIKE '%foo%') )",
+				templateData: struct {
+					Names []interface{}
+				}{
 					Names: []interface{}{"%foo%", "%bar%", "%var%"},
 				},
 			},
