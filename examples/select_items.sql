@@ -20,4 +20,12 @@ WHERE
     (name LIKE '%bar%' OR kana LIKE '%bar%')
     /**- end -**/
   )
+  AND ( /** multi "(name LIKE ? OR kana LIKE ?)" "AND" .Names -**/
+    /**- if false -**/
+    -- multi は クエリー部と接続部を文字列で指定できる
+    (name LIKE '%foo%' OR kana LIKE '%foo%')
+    AND
+    (name LIKE '%bar%' OR kana LIKE '%bar%')
+    /**- end -**/
+  )
   /**- end **/

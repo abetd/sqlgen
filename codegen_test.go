@@ -86,11 +86,13 @@ func Test_getFields(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getFields(tt.args.src)
+			var fields []Field
+			var err error
+			fields, err = getFields(fields, tt.args.src)
 			if !tt.wantErr(t, err, fmt.Sprintf("getFields(%v)", tt.args.src)) {
 				return
 			}
-			assert.Equalf(t, tt.want, got, "getFields(%v)", tt.args.src)
+			assert.Equalf(t, tt.want, fields, "getFields(%v)", tt.args.src)
 		})
 	}
 }

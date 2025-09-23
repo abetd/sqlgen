@@ -69,7 +69,7 @@ func selectItems(db *sql.DB) error {
 		ID:                 1,
 		IsSelectMultiNames: true,
 		Where:              "(name LIKE ? OR kana LIKE ?)",
-		Sep:                " AND ",
+		Sep:                "AND",
 		Names:              []interface{}{"%test%", "%TEST%"},
 	}
 	q, err := e.Query()

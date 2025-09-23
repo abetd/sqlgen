@@ -63,14 +63,10 @@ func (g *CodeGen) CodeGen() error {
 		matches := extractBlockComments(string(content))
 		var fields []Field
 		for _, match := range matches {
-			newFields, err := getFields(match)
+			fields, err = getFields(fields, match)
 			if err != nil {
 				return err
 			}
-			if len(newFields) == 0 {
-				continue
-			}
-			fields = append(fields, newFields...)
 		}
 		structs[i] = Struct{
 			SQLFilePath:  sqlFile,
@@ -142,43 +138,65 @@ func parseFields(src string) []string {
 	return fields
 }
 
-func getFields(src string) ([]Field, error) {
+func getFields(fields []Field, src string) ([]Field, error) {
 	blocks := parseFields(src)
 	if len(blocks) < 2 {
-		return nil, nil
+		return fields, nil
 	}
-	var fields []Field
+	var err error
 	switch blocks[0] {
 	case "param":
-		fields = appendFiled(fields, blocks[1], "interface{}")
+		fields, err = appendFiled(fields, blocks[1], "interface{}")
 	case "int":
-		fields = appendFiled(fields, blocks[1], "int")
+		fields, err = appendFiled(fields, blocks[1], "int")
 	case "float":
-		fields = appendFiled(fields, blocks[1], "float64")
+		fields, err = appendFiled(fields, blocks[1], "float64")
 	case "string":
-		fields = appendFiled(fields, blocks[1], "string")
+		fields, err = appendFiled(fields, blocks[1], "string")
 	case "if":
-		fields = appendFiled(fields, blocks[1], "bool")
+		fields, err = appendFiled(fields, blocks[1], "bool")
 	case "in":
-		fields = appendFiled(fields, blocks[1], "[]interface{}")
+		fields, err = appendFiled(fields, blocks[1], "[]interface{}")
 	case "multi":
 		if len(blocks) != 4 {
 			return nil, fmt.Errorf("invalid number of fields: %d", len(blocks))
 		}
 		// 1: (name LIKE ? OR kana LIKE ?), 2: "AND", 3: []interface{}{"%foo%", "%bar%", "%var%"}
 		// (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?) AND (name LIKE ? OR kana LIKE ?)
-		fields = appendFiled(fields, blocks[1], "string")
-		fields = appendFiled(fields, blocks[2], "string")
-		fields = appendFiled(fields, blocks[3], "[]interface{}")
+		fields, err = appendFiled(fields, blocks[1], "string")
+		if err != nil {
+			return nil, err
+		}
+		fields, err = appendFiled(fields, blocks[2], "string")
+		if err != nil {
+			return nil, err
+		}
+		fields, err = appendFiled(fields, blocks[3], "[]interface{}")
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err != nil {
+		return nil, err
 	}
 	return fields, nil
 }
 
-func appendFiled(fields []Field, s, t string) []Field {
+func appendFiled(fields []Field, s, t string) ([]Field, error) {
 	if !strings.HasPrefix(s, ".") {
-		return fields
+		return fields, nil
 	}
-	return append(fields, Field{Name: strings.TrimPrefix(s, "."), Type: t})
+	fieldName := strings.TrimPrefix(s, ".")
+	for _, field := range fields {
+		if field.Name == fieldName {
+			if field.Type != t {
+				return nil, fmt.Errorf("field '%s' type mismatch: existing=%s, new=%s", fieldName, field.Type, t)
+			}
+			return fields, nil
+		}
+	}
+
+	return append(fields, Field{Name: fieldName, Type: t}), nil
 }
 
 func getFiles(dir string, ext string) ([]string, error) {
